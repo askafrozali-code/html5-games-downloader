@@ -1,0 +1,17 @@
+# No external dependencies required
+# This script uses only Python standard library:
+# - os
+# - subprocess
+# - json
+# - time
+# - shutil
+# - pathlib
+# - urllib
+# - zipfile
+# - sys
+
+# System Requirements:
+# - Python 3.7+
+# - Git (for cloning repositories)
+# - 2-5 GB disk space
+# - Internet connection

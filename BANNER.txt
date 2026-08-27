@@ -1,0 +1,33 @@
+```
+╔════════════════════════════════════════════════════════════════╗
+║                                                                ║
+║          🎮 HTML5 GAMES DOWNLOADER 🎮                         ║
+║                                                                ║
+║     Download 200+ Open-Source HTML5 Games in One ZIP!        ║
+║                                                                ║
+║  ✨ Features:                                                 ║
+║    • 200+ Popular HTML5 Games                                 ║
+║    • Single ZIP Archive                                       ║
+║    • Automatic GitHub Search                                  ║
+║    • Fast Cloning with Progress Tracking                      ║
+║    • Organized File Structure                                 ║
+║                                                                ║
+║  🚀 Quick Start:                                              ║
+║    1. git clone <repo-url>                                    ║
+║    2. python download_games.py                                ║
+║    3. Wait 1-2 hours                                          ║
+║    4. Get html5_games_200plus.zip                             ║
+║                                                                ║
+║  📊 What's Included:                                          ║
+║    ✓ 2048                ✓ Hextris                            ║
+║    ✓ Clumsy Bird         ✓ Pacman                             ║
+║    ✓ AncientBeast        ✓ Kaetram                            ║
+║    ✓ ... and 195+ more!                                       ║
+║                                                                ║
+║  💾 Size: ~2-5 GB (compressed)                               ║
+║  ⏱️  Time: 30-60 minutes download + 5-10 minutes ZIP          ║
+║                                                                ║
+║  📧 Made with ❤️ for HTML5 Game Developers                   ║
+║                                                                ║
+╚════════════════════════════════════════════════════════════════╝
+```

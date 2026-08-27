@@ -1,0 +1,31 @@
+# Ignore downloaded games directory
+html5_games/
+html5_games_200plus.zip
+
+# Ignore Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Ignore virtual environments
+venv/
+env/
+ENV/
+
+# Ignore IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Ignore log files
+*.log
+logs/
+
+# Ignore temporary files
+*.tmp
+temp/

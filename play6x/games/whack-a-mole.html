@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Whack-a-Mole — Play6x</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%237c5cff%22/><text x=%2250%22 y=%2266%22 font-size=%2255%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22sans-serif%22 font-weight=%22bold%22>6x</text></svg>">
+<style>
+  :root{--bg:#0b0e17;--tile:#161c31;--text:#eef1ff;--dim:#8b91ab;--primary:#7c5cff;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:Segoe UI,Roboto,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:16px;}
+  .wrap{width:100%;max-width:420px;text-align:center;}
+  .hud{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .hud h1{font-size:20px;margin:0;}
+  .score-box{background:var(--tile);border-radius:10px;padding:8px 16px;}
+  .score-box small{display:block;color:var(--dim);font-size:10px;}
+  .score-box b{font-size:18px;}
+  .board{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+  .hole{aspect-ratio:1;background:#111629;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:36px;cursor:pointer;overflow:hidden;border:2px solid #262d4a;}
+  .hole.up{background:#1c2340;}
+  .msg{color:var(--dim);font-size:13px;margin-top:10px;}
+  button{background:linear-gradient(90deg,var(--primary),#22d3ee);border:0;color:#0b0e17;font-weight:700;padding:10px 18px;border-radius:999px;cursor:pointer;font-size:13px;margin-top:12px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hud">
+    <h1>Whack-a-Mole</h1>
+    <div class="score-box"><small>SCORE · TIME</small><b id="score">0 · 30</b></div>
+  </div>
+  <div class="board" id="board"></div>
+  <div class="msg" id="msg">Click the moles before they hide. 30 seconds.</div>
+  <button id="restartBtn">Start / Restart</button>
+</div>
+<script>
+const HOLES=9;
+const board=document.getElementById('board');
+const scoreEl=document.getElementById('score');
+const msg=document.getElementById('msg');
+let score, timeLeft, activeIdx, spawnTimer, countdownTimer, running;
+
+function buildHoles(){
+  board.innerHTML='';
+  for(let i=0;i<HOLES;i++){
+    const el=document.createElement('div');
+    el.className='hole';
+    el.dataset.i=i;
+    el.addEventListener('click', ()=>whack(i));
+    board.appendChild(el);
+  }
+}
+
+function whack(i){
+  if(!running) return;
+  if(i===activeIdx){
+    score++;
+    scoreEl.textContent=`${score} · ${timeLeft}`;
+    setMole(-1);
+  }
+}
+
+function setMole(i){
+  document.querySelectorAll('.hole').forEach(h=>{
+    h.classList.remove('up');
+    h.textContent='';
+  });
+  activeIdx=i;
+  if(i>=0){
+    const h=document.querySelector(`.hole[data-i='${i}']`);
+    h.classList.add('up');
+    h.textContent='🐹';
+  }
+}
+
+function spawnLoop(){
+  if(!running) return;
+  const next=Math.floor(Math.random()*HOLES);
+  setMole(next);
+  const delay=550-Math.min(300, (30-timeLeft)*8);
+  spawnTimer=setTimeout(spawnLoop, Math.max(280, delay));
+}
+
+function tick(){
+  timeLeft--;
+  scoreEl.textContent=`${score} · ${timeLeft}`;
+  if(timeLeft<=0){
+    endGame();
+  }
+}
+
+function endGame(){
+  running=false;
+  clearTimeout(spawnTimer);
+  clearInterval(countdownTimer);
+  setMole(-1);
+  msg.textContent=`Time's up! Final score: ${score}`;
+}
+
+function reset(){
+  clearTimeout(spawnTimer);
+  clearInterval(countdownTimer);
+  score=0; timeLeft=30; running=true;
+  scoreEl.textContent=`${score} · ${timeLeft}`;
+  msg.textContent='Click the moles before they hide!';
+  buildHoles();
+  spawnLoop();
+  countdownTimer=setInterval(tick, 1000);
+}
+
+document.getElementById('restartBtn').addEventListener('click', reset);
+buildHoles();
+msg.textContent='Click "Start / Restart" to begin.';
+scoreEl.textContent='0 · 30';
+</script>
+</body>
+</html>

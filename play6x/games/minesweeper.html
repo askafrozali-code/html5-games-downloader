@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minesweeper — Play6x</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%237c5cff%22/><text x=%2250%22 y=%2266%22 font-size=%2255%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22sans-serif%22 font-weight=%22bold%22>6x</text></svg>">
+<style>
+  :root{--bg:#0b0e17;--tile:#161c31;--text:#eef1ff;--dim:#8b91ab;--primary:#7c5cff;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:Segoe UI,Roboto,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:16px;}
+  .wrap{width:100%;max-width:420px;text-align:center;}
+  .hud{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .hud h1{font-size:20px;margin:0;}
+  .score-box{background:var(--tile);border-radius:10px;padding:8px 16px;}
+  .score-box small{display:block;color:var(--dim);font-size:10px;}
+  .score-box b{font-size:16px;}
+  .board{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;background:#05070d;padding:6px;border-radius:10px;}
+  .cell{aspect-ratio:1;background:#222a4d;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;cursor:pointer;user-select:none;}
+  .cell.open{background:#0f1424;cursor:default;}
+  .cell.mine{background:#ff4d8d;}
+  .cell.flag{background:#f59e0b;}
+  .msg{color:var(--dim);font-size:13px;margin:10px 0;}
+  button{background:linear-gradient(90deg,var(--primary),#22d3ee);border:0;color:#0b0e17;font-weight:700;padding:10px 18px;border-radius:999px;cursor:pointer;font-size:13px;margin-top:6px;}
+  .n1{color:#22d3ee;} .n2{color:#34d399;} .n3{color:#ff4d8d;} .n4{color:#a855f7;} .n5{color:#f59e0b;} .n6{color:#0ea5e9;} .n7{color:#eef1ff;} .n8{color:#8b91ab;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hud">
+    <h1>Minesweeper</h1>
+    <div class="score-box"><small>MINES LEFT</small><b id="score">15</b></div>
+  </div>
+  <div class="msg" id="msg">Left-click to reveal, right-click (or long-press) to flag. 15 mines.</div>
+  <div class="board" id="board"></div>
+  <button id="restartBtn">Restart</button>
+</div>
+<script>
+const ROWS=10, COLS=10, MINES=15;
+const board=document.getElementById('board');
+const scoreEl=document.getElementById('score');
+const msg=document.getElementById('msg');
+let grid, over, revealedCount;
+
+function reset(){
+  grid=Array.from({length:ROWS},()=>Array.from({length:COLS},()=>({mine:false,open:false,flag:false,adj:0})));
+  let placed=0;
+  while(placed<MINES){
+    const r=Math.floor(Math.random()*ROWS), c=Math.floor(Math.random()*COLS);
+    if(!grid[r][c].mine){ grid[r][c].mine=true; placed++; }
+  }
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+    if(grid[r][c].mine) continue;
+    let n=0;
+    for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
+      const rr=r+dr, cc=c+dc;
+      if(rr>=0&&rr<ROWS&&cc>=0&&cc<COLS&&grid[rr][cc].mine) n++;
+    }
+    grid[r][c].adj=n;
+  }
+  over=false; revealedCount=0;
+  scoreEl.textContent=MINES;
+  msg.textContent='Left-click to reveal, right-click (or long-press) to flag. 15 mines.';
+  render();
+}
+
+function reveal(r,c){
+  if(r<0||r>=ROWS||c<0||c>=COLS) return;
+  const cell=grid[r][c];
+  if(cell.open || cell.flag) return;
+  cell.open=true;
+  revealedCount++;
+  if(cell.adj===0 && !cell.mine){
+    for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
+      if(dr||dc) reveal(r+dr,c+dc);
+    }
+  }
+}
+
+function checkWin(){
+  return revealedCount === ROWS*COLS-MINES;
+}
+
+function render(){
+  board.innerHTML='';
+  for(let r=0;r<ROWS;r++){
+    for(let c=0;c<COLS;c++){
+      const cell=grid[r][c];
+      const el=document.createElement('div');
+      el.className='cell'+(cell.open?' open':'')+(cell.flag?' flag':'')+(cell.open&&cell.mine?' mine':'');
+      if(cell.open && !cell.mine && cell.adj>0){
+        el.textContent=cell.adj;
+        el.classList.add('n'+cell.adj);
+      } else if(cell.open && cell.mine){
+        el.textContent='💣';
+      } else if(cell.flag){
+        el.textContent='🚩';
+      }
+      el.addEventListener('click', ()=>onCellClick(r,c));
+      el.addEventListener('contextmenu', e=>{ e.preventDefault(); onFlag(r,c); });
+      let pressTimer;
+      el.addEventListener('touchstart', ()=>{ pressTimer=setTimeout(()=>onFlag(r,c), 420); }, {passive:true});
+      el.addEventListener('touchend', ()=>clearTimeout(pressTimer));
+      board.appendChild(el);
+    }
+  }
+}
+
+function onCellClick(r,c){
+  if(over) return;
+  const cell=grid[r][c];
+  if(cell.flag) return;
+  if(cell.mine){
+    cell.open=true;
+    over=true;
+    revealAllMines();
+    render();
+    msg.textContent='Boom! You hit a mine. Try again.';
+    return;
+  }
+  reveal(r,c);
+  render();
+  if(checkWin()){
+    over=true;
+    msg.textContent='You cleared the field! 🎉';
+  }
+}
+
+function onFlag(r,c){
+  if(over) return;
+  const cell=grid[r][c];
+  if(cell.open) return;
+  cell.flag=!cell.flag;
+  const flagged=grid.flat().filter(c=>c.flag).length;
+  scoreEl.textContent=Math.max(0, MINES-flagged);
+  render();
+}
+
+function revealAllMines(){
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) if(grid[r][c].mine) grid[r][c].open=true;
+}
+
+document.getElementById('restartBtn').addEventListener('click', reset);
+reset();
+</script>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simon Says — Play6x</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%237c5cff%22/><text x=%2250%22 y=%2266%22 font-size=%2255%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22sans-serif%22 font-weight=%22bold%22>6x</text></svg>">
+<style>
+  :root{--bg:#0b0e17;--tile:#161c31;--text:#eef1ff;--dim:#8b91ab;--primary:#7c5cff;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:Segoe UI,Roboto,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:16px;}
+  .wrap{width:100%;max-width:360px;text-align:center;}
+  .hud{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .hud h1{font-size:20px;margin:0;}
+  .score-box{background:var(--tile);border-radius:10px;padding:8px 16px;}
+  .score-box small{display:block;color:var(--dim);font-size:10px;}
+  .score-box b{font-size:18px;}
+  .pad{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:10px;width:280px;height:280px;margin:0 auto;}
+  .pad div{border-radius:16px;cursor:pointer;opacity:.55;transition:opacity .1s, transform .1s;}
+  .pad div.lit{opacity:1;transform:scale(0.97);}
+  .p0{background:#22d3ee;border-radius:16px 4px 4px 4px;}
+  .p1{background:#ff4d8d;border-radius:4px 16px 4px 4px;}
+  .p2{background:#f59e0b;border-radius:4px 4px 4px 16px;}
+  .p3{background:#34d399;border-radius:4px 4px 16px 4px;}
+  .msg{color:var(--dim);font-size:14px;margin:14px 0;min-height:20px;}
+  button{background:linear-gradient(90deg,var(--primary),#22d3ee);border:0;color:#0b0e17;font-weight:700;padding:10px 18px;border-radius:999px;cursor:pointer;font-size:13px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hud">
+    <h1>Simon Says</h1>
+    <div class="score-box"><small>ROUND · BEST</small><b id="score">0 · 0</b></div>
+  </div>
+  <div class="pad" id="pad">
+    <div class="p0" data-i="0"></div>
+    <div class="p1" data-i="1"></div>
+    <div class="p2" data-i="2"></div>
+    <div class="p3" data-i="3"></div>
+  </div>
+  <div class="msg" id="msg">Watch the pattern, then repeat it. Click Start.</div>
+  <button id="startBtn">Start</button>
+</div>
+<script>
+const pads=document.querySelectorAll('.pad div');
+const scoreEl=document.getElementById('score');
+const msg=document.getElementById('msg');
+let best=Number(localStorage.getItem('play6x-simon-best')||0);
+let sequence, playerIndex, playing, round;
+
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let actx;
+const FREQS=[261.6,329.6,392.0,523.3];
+function beep(i){
+  try{
+    actx = actx || new AudioCtx();
+    const o=actx.createOscillator(), g=actx.createGain();
+    o.frequency.value=FREQS[i];
+    o.type='sine';
+    g.gain.setValueAtTime(0.15, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime+0.35);
+    o.connect(g); g.connect(actx.destination);
+    o.start(); o.stop(actx.currentTime+0.35);
+  }catch(e){}
+}
+
+function reset(){
+  sequence=[]; playerIndex=0; playing=false; round=0;
+  scoreEl.textContent=`${round} · ${best}`;
+  msg.textContent='Watch the pattern, then repeat it. Click Start.';
+}
+
+function lightUp(i){
+  pads[i].classList.add('lit');
+  beep(i);
+  setTimeout(()=>pads[i].classList.remove('lit'), 300);
+}
+
+async function playSequence(){
+  playing=true;
+  msg.textContent='Watch...';
+  await new Promise(r=>setTimeout(r,500));
+  for(const i of sequence){
+    lightUp(i);
+    await new Promise(r=>setTimeout(r,450));
+  }
+  playing=false;
+  playerIndex=0;
+  msg.textContent='Your turn — repeat the pattern';
+}
+
+function nextRound(){
+  round++;
+  sequence.push(Math.floor(Math.random()*4));
+  scoreEl.textContent=`${round} · ${best}`;
+  playSequence();
+}
+
+function handlePad(i){
+  if(playing || sequence.length===0) return;
+  lightUp(i);
+  if(sequence[playerIndex]!==i){
+    playing=true;
+    msg.textContent=`Wrong! Game over at round ${round}.`;
+    if(round-1>best){ best=round-1; localStorage.setItem('play6x-simon-best', best); }
+    scoreEl.textContent=`${round-1} · ${best}`;
+    sequence=[];
+    return;
+  }
+  playerIndex++;
+  if(playerIndex===sequence.length){
+    msg.textContent='Nice! Next round...';
+    setTimeout(nextRound, 700);
+  }
+}
+
+pads.forEach(p=>p.addEventListener('click', ()=>handlePad(Number(p.dataset.i))));
+document.getElementById('startBtn').addEventListener('click', ()=>{ reset(); nextRound(); });
+
+reset();
+</script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tic Tac Toe — Play6x</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%237c5cff%22/><text x=%2250%22 y=%2266%22 font-size=%2255%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22sans-serif%22 font-weight=%22bold%22>6x</text></svg>">
+<style>
+  :root{--bg:#0b0e17;--tile:#161c31;--text:#eef1ff;--dim:#8b91ab;--primary:#7c5cff;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:Segoe UI,Roboto,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:16px;}
+  .wrap{width:100%;max-width:340px;text-align:center;}
+  h1{font-size:20px;margin:0 0 10px;}
+  .board{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+  .cell{aspect-ratio:1;background:var(--tile);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:38px;font-weight:800;cursor:pointer;border:1px solid #262d4a;}
+  .cell.x{color:#22d3ee;}
+  .cell.o{color:#ff4d8d;}
+  .msg{color:var(--dim);font-size:14px;margin-top:14px;min-height:20px;}
+  button{background:linear-gradient(90deg,var(--primary),#22d3ee);border:0;color:#0b0e17;font-weight:700;padding:10px 18px;border-radius:999px;cursor:pointer;font-size:13px;margin-top:8px;}
+  .modes{display:flex;gap:8px;justify-content:center;margin-bottom:12px;}
+  .modes button{margin:0;background:var(--tile);color:var(--dim);padding:7px 14px;font-weight:600;}
+  .modes button.active{background:linear-gradient(90deg,var(--primary),#22d3ee);color:#0b0e17;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Tic Tac Toe</h1>
+  <div class="modes">
+    <button id="mode2p" class="active">2 Players</button>
+    <button id="modeCpu">Vs CPU</button>
+  </div>
+  <div class="board" id="board"></div>
+  <div class="msg" id="msg">X goes first</div>
+  <button id="restartBtn">Restart</button>
+</div>
+<script>
+const board=document.getElementById('board');
+const msg=document.getElementById('msg');
+let cells, turn, over, vsCpu=false;
+
+const WINS=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+
+function reset(){
+  cells=Array(9).fill(null);
+  turn='X'; over=false;
+  msg.textContent='X goes first';
+  render();
+}
+
+function render(){
+  board.innerHTML='';
+  cells.forEach((v,i)=>{
+    const el=document.createElement('div');
+    el.className='cell'+(v?' '+v.toLowerCase():'');
+    el.textContent=v||'';
+    el.addEventListener('click', ()=>play(i));
+    board.appendChild(el);
+  });
+}
+
+function checkWinner(cs){
+  for(const [a,b,c] of WINS){
+    if(cs[a] && cs[a]===cs[b] && cs[a]===cs[c]) return cs[a];
+  }
+  if(cs.every(v=>v)) return 'draw';
+  return null;
+}
+
+function play(i){
+  if(over || cells[i]) return;
+  cells[i]=turn;
+  const w=checkWinner(cells);
+  if(w){ finish(w); return; }
+  turn = turn==='X' ? 'O' : 'X';
+  render();
+  msg.textContent=`${turn}'s turn`;
+  if(vsCpu && turn==='O' && !over){
+    setTimeout(cpuMove, 350);
+  }
+}
+
+function cpuMove(){
+  if(over) return;
+  let move = findBestMove('O') ?? findBestMove('X') ?? bestOpenCell();
+  if(move==null) return;
+  cells[move]='O';
+  const w=checkWinner(cells);
+  if(w){ finish(w); return; }
+  turn='X';
+  render();
+  msg.textContent="X's turn";
+}
+
+function findBestMove(who){
+  for(let i=0;i<9;i++){
+    if(cells[i]) continue;
+    const copy=[...cells]; copy[i]=who;
+    if(checkWinner(copy)===who) return i;
+  }
+  return null;
+}
+
+function bestOpenCell(){
+  if(!cells[4]) return 4;
+  const corners=[0,2,6,8].filter(i=>!cells[i]);
+  if(corners.length) return corners[Math.floor(Math.random()*corners.length)];
+  const open=cells.map((v,i)=>v?null:i).filter(v=>v!=null);
+  return open.length ? open[Math.floor(Math.random()*open.length)] : null;
+}
+
+function finish(w){
+  over=true;
+  render();
+  msg.textContent = w==='draw' ? "It's a draw!" : `${w} wins! 🎉`;
+}
+
+document.getElementById('mode2p').addEventListener('click', ()=>{ vsCpu=false; document.getElementById('mode2p').classList.add('active'); document.getElementById('modeCpu').classList.remove('active'); reset(); });
+document.getElementById('modeCpu').addEventListener('click', ()=>{ vsCpu=true; document.getElementById('modeCpu').classList.add('active'); document.getElementById('mode2p').classList.remove('active'); reset(); });
+document.getElementById('restartBtn').addEventListener('click', reset);
+
+reset();
+</script>
+</body>
+</html>

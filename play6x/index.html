@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Play6x — Free HTML5 Games, No Download</title>
+<meta name="description" content="Play6x — play free HTML5 browser games instantly. Racing, action, puzzle, driving, arcade and flash classics, all in one place.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%237c5cff%22/><text x=%2250%22 y=%2266%22 font-size=%2255%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22sans-serif%22 font-weight=%22bold%22>6x</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="brand">
+      <span class="logo-mark">🎮</span>
+      <span>Play<span class="brand-x">6x</span></span>
+    </a>
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Search 250+ games... e.g. Tetris, Racing, Snake">
+    </div>
+    <div class="header-stats" id="headerStats"></div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="container">
+    <h1>Play <span class="accent-text">HTML5 Games</span><br>Free, Instant, No Download</h1>
+    <p>Play6x brings together every game from the HTML5 games library — racing, action, puzzle, arcade and flash classics — plus a growing set of games you can play right now, straight in your browser.</p>
+    <div class="hero-badges">
+      <span class="badge">🕹️ <b id="statPlayable">14</b> Playable Now</span>
+      <span class="badge">📚 <b id="statTotal">256</b> Games Catalogued</span>
+      <span class="badge">🚫 No Install Required</span>
+    </div>
+  </div>
+</section>
+
+<div class="filter-bar">
+  <div class="container filter-row">
+    <div class="tabs" id="sectionTabs">
+      <button class="tab-btn active" data-section="all">All Games</button>
+      <button class="tab-btn" data-section="playable">Playable Now</button>
+      <button class="tab-btn" data-section="Original">Play6x Originals</button>
+      <button class="tab-btn" data-section="Main">Main</button>
+      <button class="tab-btn" data-section="Driving">Driving</button>
+      <button class="tab-btn" data-section="Flash">Flash</button>
+    </div>
+    <select class="category-select" id="categorySelect">
+      <option value="all">All Categories</option>
+    </select>
+  </div>
+</div>
+
+<main class="container">
+  <div class="section-title">
+    <h2 id="resultsTitle">All Games</h2>
+    <span id="resultsCount"></span>
+  </div>
+  <div class="games-grid" id="gamesGrid"></div>
+  <div class="empty-state" id="emptyState" style="display:none;">
+    No games match your search. Try a different keyword or category.
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    Play6x — a fan-made HTML5 games hub. Built for the html5-games-downloader project.
+    <br>Game titles are catalogued from the project's game list; playable titles marked "Play Now" run entirely in your browser.
+  </div>
+</footer>
+
+<script src="js/games-data.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

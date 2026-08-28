@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pong — Play6x</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%237c5cff%22/><text x=%2250%22 y=%2266%22 font-size=%2255%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22sans-serif%22 font-weight=%22bold%22>6x</text></svg>">
+<style>
+  :root{--bg:#0b0e17;--tile:#161c31;--text:#eef1ff;--dim:#8b91ab;--primary:#7c5cff;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:Segoe UI,Roboto,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:16px;}
+  .wrap{width:100%;max-width:520px;text-align:center;}
+  .hud{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .hud h1{font-size:20px;margin:0;}
+  .score-box{background:var(--tile);border-radius:10px;padding:8px 16px;}
+  .score-box small{display:block;color:var(--dim);font-size:10px;}
+  .score-box b{font-size:18px;}
+  canvas{background:#05070d;border-radius:12px;width:100%;height:auto;touch-action:none;}
+  .msg{color:var(--dim);font-size:13px;margin-top:10px;}
+  button{background:linear-gradient(90deg,var(--primary),#22d3ee);border:0;color:#0b0e17;font-weight:700;padding:10px 18px;border-radius:999px;cursor:pointer;font-size:13px;margin-top:12px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hud">
+    <h1>Pong</h1>
+    <div class="score-box"><small>YOU — CPU</small><b id="score">0 — 0</b></div>
+  </div>
+  <canvas id="canvas" width="480" height="300"></canvas>
+  <div class="msg">Move your mouse, drag on touch, or use ↑ / ↓ to move the paddle. First to 7 wins.</div>
+  <button id="restartBtn">Restart</button>
+</div>
+<script>
+const canvas=document.getElementById('canvas');
+const ctx=canvas.getContext('2d');
+const W=canvas.width, H=canvas.height;
+const scoreEl=document.getElementById('score');
+
+const paddleH=64, paddleW=10;
+let player, cpu, ball, playerScore, cpuScore, over;
+
+function reset(full){
+  player={y:H/2-paddleH/2};
+  cpu={y:H/2-paddleH/2};
+  ball={x:W/2,y:H/2,vx:4,vy:3,r:7};
+  if(full){ playerScore=0; cpuScore=0; over=false; }
+  scoreEl.textContent=`${playerScore} — ${cpuScore}`;
+}
+
+function serve(dir){
+  ball={x:W/2,y:H/2,vx:4*dir,vy:(Math.random()*4-2),r:7};
+}
+
+canvas.addEventListener('mousemove', e=>{
+  const rect=canvas.getBoundingClientRect();
+  const scale=H/rect.height;
+  player.y = (e.clientY-rect.top)*scale - paddleH/2;
+  player.y = Math.max(0, Math.min(H-paddleH, player.y));
+});
+
+canvas.addEventListener('touchmove', e=>{
+  const rect=canvas.getBoundingClientRect();
+  const scale=H/rect.height;
+  const t=e.touches[0];
+  player.y=(t.clientY-rect.top)*scale - paddleH/2;
+  player.y=Math.max(0, Math.min(H-paddleH, player.y));
+  e.preventDefault();
+}, {passive:false});
+
+const keys={};
+document.addEventListener('keydown', e=>{ keys[e.key]=true; if(['ArrowUp','ArrowDown'].includes(e.key)) e.preventDefault(); });
+document.addEventListener('keyup', e=>{ keys[e.key]=false; });
+
+function update(){
+  if(over) return;
+  if(keys['ArrowUp']) player.y=Math.max(0,player.y-6);
+  if(keys['ArrowDown']) player.y=Math.min(H-paddleH,player.y+6);
+
+  const cpuCenter=cpu.y+paddleH/2;
+  const target=ball.y;
+  if(cpuCenter < target-6) cpu.y+=4.2;
+  else if(cpuCenter > target+6) cpu.y-=4.2;
+  cpu.y=Math.max(0, Math.min(H-paddleH, cpu.y));
+
+  ball.x+=ball.vx; ball.y+=ball.vy;
+  if(ball.y-ball.r<0){ ball.y=ball.r; ball.vy*=-1; }
+  if(ball.y+ball.r>H){ ball.y=H-ball.r; ball.vy*=-1; }
+
+  if(ball.x-ball.r<paddleW+6 && ball.y>player.y && ball.y<player.y+paddleH && ball.vx<0){
+    ball.vx*=-1.05; ball.vy += (ball.y-(player.y+paddleH/2))*0.06;
+    ball.x=paddleW+6+ball.r;
+  }
+  if(ball.x+ball.r>W-paddleW-6 && ball.y>cpu.y && ball.y<cpu.y+paddleH && ball.vx>0){
+    ball.vx*=-1.05; ball.vy += (ball.y-(cpu.y+paddleH/2))*0.06;
+    ball.x=W-paddleW-6-ball.r;
+  }
+
+  if(ball.x<0){ cpuScore++; scoreEl.textContent=`${playerScore} — ${cpuScore}`; checkWin() || serve(1); }
+  if(ball.x>W){ playerScore++; scoreEl.textContent=`${playerScore} — ${cpuScore}`; checkWin() || serve(-1); }
+}
+
+function checkWin(){
+  if(playerScore>=7 || cpuScore>=7){
+    over=true;
+    return true;
+  }
+  return false;
+}
+
+function draw(){
+  ctx.fillStyle='#05070d';
+  ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='#262d4a';
+  ctx.setLineDash([6,10]);
+  ctx.beginPath(); ctx.moveTo(W/2,0); ctx.lineTo(W/2,H); ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle='#22d3ee';
+  ctx.fillRect(6, player.y, paddleW, paddleH);
+  ctx.fillStyle='#ff4d8d';
+  ctx.fillRect(W-6-paddleW, cpu.y, paddleW, paddleH);
+
+  ctx.fillStyle='#eef1ff';
+  ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI*2); ctx.fill();
+
+  if(over){
+    ctx.fillStyle='rgba(5,7,13,.75)';
+    ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#eef1ff';
+    ctx.font='bold 22px sans-serif';
+    ctx.textAlign='center';
+    ctx.fillText(playerScore>cpuScore ? 'You Win! 🎉' : 'CPU Wins', W/2, H/2);
+  }
+}
+
+function loop(){
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+document.getElementById('restartBtn').addEventListener('click', ()=>reset(true));
+reset(true);
+loop();
+</script>
+</body>
+</html>

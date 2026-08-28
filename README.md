@@ -6,6 +6,23 @@ A comprehensive Python project to automatically download and organize 390+ popul
 
 ---
 
+## 🕹️ Play6x — the games website
+
+This repo also ships **Play6x**, a static website that turns the games list
+below into a browsable, searchable catalog — plus 14 fully playable
+original HTML5 games (2048, Snake, Tetris, Pacman, Pong, and more) you can
+play right now, no download required.
+
+```bash
+cd play6x
+python3 -m http.server 8000
+# open http://localhost:8000
+```
+
+See [`play6x/README.md`](play6x/README.md) for details.
+
+---
+
 ## 📊 Repository Contents
 
 ### Main Files

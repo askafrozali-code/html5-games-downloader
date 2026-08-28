@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connect Four — Play6x</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%237c5cff%22/><text x=%2250%22 y=%2266%22 font-size=%2255%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22sans-serif%22 font-weight=%22bold%22>6x</text></svg>">
+<style>
+  :root{--bg:#0b0e17;--tile:#161c31;--text:#eef1ff;--dim:#8b91ab;--primary:#7c5cff;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:Segoe UI,Roboto,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:16px;}
+  .wrap{width:100%;max-width:420px;text-align:center;}
+  h1{font-size:20px;margin:0 0 10px;}
+  .board{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;background:#111629;padding:8px;border-radius:12px;}
+  .cell{aspect-ratio:1;border-radius:50%;background:#05070d;cursor:pointer;position:relative;}
+  .cell::after{content:'';position:absolute;inset:8%;border-radius:50%;background:transparent;}
+  .cell.p1::after{background:#22d3ee;}
+  .cell.p2::after{background:#ff4d8d;}
+  .msg{color:var(--dim);font-size:14px;margin-top:14px;min-height:20px;}
+  button{background:linear-gradient(90deg,var(--primary),#22d3ee);border:0;color:#0b0e17;font-weight:700;padding:10px 18px;border-radius:999px;cursor:pointer;font-size:13px;margin-top:8px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Connect Four</h1>
+  <div class="board" id="board"></div>
+  <div class="msg" id="msg">Player 1 (cyan) goes first — click a column</div>
+  <button id="restartBtn">Restart</button>
+</div>
+<script>
+const ROWS=6, COLS=7;
+const board=document.getElementById('board');
+const msg=document.getElementById('msg');
+let grid, turn, over;
+
+function reset(){
+  grid=Array.from({length:ROWS},()=>Array(COLS).fill(0));
+  turn=1; over=false;
+  msg.textContent='Player 1 (cyan) goes first — click a column';
+  render();
+}
+
+function render(){
+  board.innerHTML='';
+  for(let r=0;r<ROWS;r++){
+    for(let c=0;c<COLS;c++){
+      const el=document.createElement('div');
+      const v=grid[r][c];
+      el.className='cell'+(v===1?' p1':v===2?' p2':'');
+      el.addEventListener('click', ()=>drop(c));
+      board.appendChild(el);
+    }
+  }
+}
+
+function drop(c){
+  if(over) return;
+  for(let r=ROWS-1;r>=0;r--){
+    if(!grid[r][c]){
+      grid[r][c]=turn;
+      if(checkWin(r,c,turn)){
+        over=true;
+        render();
+        msg.textContent=`Player ${turn} (${turn===1?'cyan':'pink'}) wins! 🎉`;
+        return;
+      }
+      if(grid.every(row=>row.every(v=>v))){
+        over=true;
+        render();
+        msg.textContent="It's a draw!";
+        return;
+      }
+      turn = turn===1?2:1;
+      render();
+      msg.textContent=`Player ${turn}'s turn (${turn===1?'cyan':'pink'})`;
+      return;
+    }
+  }
+}
+
+function checkWin(r,c,p){
+  const dirs=[[0,1],[1,0],[1,1],[1,-1]];
+  for(const [dr,dc] of dirs){
+    let count=1;
+    let rr=r+dr, cc=c+dc;
+    while(rr>=0&&rr<ROWS&&cc>=0&&cc<COLS&&grid[rr][cc]===p){ count++; rr+=dr; cc+=dc; }
+    rr=r-dr; cc=c-dc;
+    while(rr>=0&&rr<ROWS&&cc>=0&&cc<COLS&&grid[rr][cc]===p){ count++; rr-=dr; cc-=dc; }
+    if(count>=4) return true;
+  }
+  return false;
+}
+
+document.getElementById('restartBtn').addEventListener('click', reset);
+reset();
+</script>
+</body>
+</html>

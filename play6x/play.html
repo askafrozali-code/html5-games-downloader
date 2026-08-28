@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Play — Play6x</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%237c5cff%22/><text x=%2250%22 y=%2266%22 font-size=%2255%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22sans-serif%22 font-weight=%22bold%22>6x</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="brand">
+      <span class="logo-mark">🎮</span>
+      <span>Play<span class="brand-x">6x</span></span>
+    </a>
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Search games...">
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <div class="play-header">
+    <a href="index.html" class="back-link">&larr; Back to all games</a>
+  </div>
+
+  <div class="play-title" id="playTitle"></div>
+
+  <div id="stageWrap"></div>
+
+  <div class="related-grid">
+    <div class="section-title">
+      <h2>More like this</h2>
+    </div>
+    <div class="games-grid" id="relatedGrid"></div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    Play6x — a fan-made HTML5 games hub. Built for the html5-games-downloader project.
+  </div>
+</footer>
+
+<script src="js/games-data.js"></script>
+<script src="js/play.js"></script>
+</body>
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Space Defender — Play6x</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%237c5cff%22/><text x=%2250%22 y=%2266%22 font-size=%2255%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22sans-serif%22 font-weight=%22bold%22>6x</text></svg>">
+<style>
+  :root{--bg:#0b0e17;--tile:#161c31;--text:#eef1ff;--dim:#8b91ab;--primary:#7c5cff;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:Segoe UI,Roboto,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:16px;}
+  .wrap{width:100%;max-width:460px;text-align:center;}
+  .hud{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .hud h1{font-size:20px;margin:0;}
+  .score-box{background:var(--tile);border-radius:10px;padding:8px 16px;}
+  .score-box small{display:block;color:var(--dim);font-size:10px;}
+  .score-box b{font-size:16px;}
+  canvas{background:#05070d;border-radius:12px;width:100%;height:auto;touch-action:none;}
+  .msg{color:var(--dim);font-size:13px;margin-top:10px;}
+  button{background:linear-gradient(90deg,var(--primary),#22d3ee);border:0;color:#0b0e17;font-weight:700;padding:10px 18px;border-radius:999px;cursor:pointer;font-size:13px;margin-top:12px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hud">
+    <h1>Space Defender</h1>
+    <div class="score-box"><small>SCORE · LIVES</small><b id="score">0 · 3</b></div>
+  </div>
+  <canvas id="canvas" width="420" height="440"></canvas>
+  <div class="msg">Arrow keys / A-D to move, Space to shoot. Drag to move on touch (auto-fire).</div>
+  <button id="restartBtn">Restart</button>
+</div>
+<script>
+const canvas=document.getElementById('canvas');
+const ctx=canvas.getContext('2d');
+const W=canvas.width, H=canvas.height;
+const scoreEl=document.getElementById('score');
+
+let ship, bullets, enemies, enemyDir, score, lives, over, frame, touchActive;
+
+function reset(){
+  ship={x:W/2, y:H-30, w:28, h:16};
+  bullets=[]; enemyDir=1; score=0; lives=3; over=false; frame=0;
+  spawnEnemies();
+  scoreEl.textContent=`${score} · ${lives}`;
+}
+
+function spawnEnemies(){
+  enemies=[];
+  const cols=7, rows=4;
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      enemies.push({x:40+c*48, y:40+r*36, w:26, h:20, alive:true});
+    }
+  }
+}
+
+const keys={};
+document.addEventListener('keydown', e=>{
+  keys[e.key]=true;
+  if(e.key===' '){ e.preventDefault(); shoot(); }
+  if(['ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
+});
+document.addEventListener('keyup', e=>{ keys[e.key]=false; });
+
+function shoot(){
+  if(over) return;
+  bullets.push({x:ship.x, y:ship.y-14, vy:-7});
+}
+
+let lastAutoShot=0;
+canvas.addEventListener('touchmove', e=>{
+  const rect=canvas.getBoundingClientRect();
+  const scale=W/rect.width;
+  ship.x=(e.touches[0].clientX-rect.left)*scale;
+  ship.x=Math.max(16, Math.min(W-16, ship.x));
+  e.preventDefault();
+}, {passive:false});
+canvas.addEventListener('touchstart', e=>{ touchActive=true; }, {passive:true});
+
+function update(){
+  if(over) return;
+  frame++;
+  if(keys['ArrowLeft']||keys['a']) ship.x-=5;
+  if(keys['ArrowRight']||keys['d']) ship.x+=5;
+  ship.x=Math.max(16, Math.min(W-16, ship.x));
+
+  if(touchActive && frame-lastAutoShot>18){ shoot(); lastAutoShot=frame; }
+
+  bullets.forEach(b=>b.y+=b.vy);
+  bullets=bullets.filter(b=>b.y>-10);
+
+  let hitEdge=false;
+  for(const en of enemies){
+    if(!en.alive) continue;
+    en.x += 0.6*enemyDir;
+    if(en.x<20 || en.x>W-20) hitEdge=true;
+  }
+  if(hitEdge){
+    enemyDir*=-1;
+    for(const en of enemies) if(en.alive) en.y+=14;
+  }
+
+  for(const b of bullets){
+    for(const en of enemies){
+      if(!en.alive) continue;
+      if(Math.abs(b.x-en.x)<en.w/2 && Math.abs(b.y-en.y)<en.h/2){
+        en.alive=false; b.y=-999; score+=10;
+        scoreEl.textContent=`${score} · ${lives}`;
+      }
+    }
+  }
+
+  for(const en of enemies){
+    if(en.alive && en.y+en.h/2 > ship.y-ship.h/2){
+      loseLife();
+      break;
+    }
+  }
+
+  if(enemies.every(e=>!e.alive)){
+    spawnEnemies();
+  }
+}
+
+function loseLife(){
+  lives--;
+  scoreEl.textContent=`${score} · ${lives}`;
+  if(lives<=0){ over=true; return; }
+  spawnEnemies();
+  bullets=[];
+}
+
+function draw(){
+  ctx.fillStyle='#05070d';
+  ctx.fillRect(0,0,W,H);
+
+  ctx.fillStyle='#22d3ee';
+  ctx.beginPath();
+  ctx.moveTo(ship.x, ship.y-ship.h);
+  ctx.lineTo(ship.x-ship.w/2, ship.y+ship.h/2);
+  ctx.lineTo(ship.x+ship.w/2, ship.y+ship.h/2);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle='#eef1ff';
+  for(const b of bullets) ctx.fillRect(b.x-2, b.y-6, 4, 10);
+
+  ctx.fillStyle='#ff4d8d';
+  for(const en of enemies){
+    if(!en.alive) continue;
+    ctx.fillRect(en.x-en.w/2, en.y-en.h/2, en.w, en.h);
+  }
+
+  if(over){
+    ctx.fillStyle='rgba(5,7,13,.8)';
+    ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#eef1ff';
+    ctx.font='bold 22px sans-serif';
+    ctx.textAlign='center';
+    ctx.fillText('Game Over', W/2, H/2-10);
+    ctx.font='14px sans-serif';
+    ctx.fillStyle='#8b91ab';
+    ctx.fillText(`Score: ${score}`, W/2, H/2+16);
+  }
+}
+
+function loop(){ update(); draw(); requestAnimationFrame(loop); }
+
+document.getElementById('restartBtn').addEventListener('click', reset);
+reset();
+loop();
+</script>
+</body>
+</html>
